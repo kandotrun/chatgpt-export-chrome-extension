@@ -1,4 +1,6 @@
-const TURN_SELECTOR = '[data-message-author-role]';
+import { CONVERSATION_TURN_SELECTOR } from './extract';
+
+const TURN_SELECTOR = CONVERSATION_TURN_SELECTOR;
 
 export interface BackfillProgress {
   iteration: number;

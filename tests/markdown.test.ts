@@ -23,6 +23,20 @@ describe('buildMarkdown', () => {
     expect(markdown).toContain('## ChatGPT\n\n了解です。\n- 要点1\n- 要点2');
   });
 
+
+  it('uses the source assistant name for non-ChatGPT exports', () => {
+    const markdown = buildMarkdown({
+      title: 'Claude export',
+      sourceUrl: 'https://claude.ai/chat/abc',
+      exportedAt: new Date('2026-06-24T03:04:05.000Z'),
+      assistantName: 'Claude',
+      messages: [{ role: 'assistant', text: 'Claude response', index: 0 }],
+    });
+
+    expect(markdown).toContain('## Claude\n\nClaude response');
+    expect(markdown).not.toContain('## ChatGPT\n\nClaude response');
+  });
+
   it('keeps fenced code blocks stable by extending conflicting fences', () => {
     const markdown = buildMarkdown({
       title: 'コード共有',

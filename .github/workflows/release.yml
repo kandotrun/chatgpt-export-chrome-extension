@@ -72,7 +72,7 @@ jobs:
 
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release edit "$TAG"               --title "Latest main build"               --notes-file release-notes.md               --target "$GITHUB_SHA"               --latest
-            gh release upload "$TAG" "$ASSET#ChatGPT Markdown Exporter ZIP" --clobber
+            gh release upload "$TAG" "$ASSET#AI Chat Markdown Exporter ZIP" --clobber
           else
-            gh release create "$TAG" "$ASSET#ChatGPT Markdown Exporter ZIP"               --title "Latest main build"               --notes-file release-notes.md               --target "$GITHUB_SHA"               --verify-tag               --latest
+            gh release create "$TAG" "$ASSET#AI Chat Markdown Exporter ZIP"               --title "Latest main build"               --notes-file release-notes.md               --target "$GITHUB_SHA"               --verify-tag               --latest
           fi

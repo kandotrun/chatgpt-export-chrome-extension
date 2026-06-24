@@ -1,12 +1,12 @@
-# ChatGPT Markdown Exporter
+# AI Chat Markdown Exporter
 
-A privacy-first Chrome extension that exports the currently opened ChatGPT conversation to a local Markdown (`.md`) file.
+A privacy-first Chrome extension that exports the currently opened ChatGPT, Claude, or Gemini conversation to a local Markdown (`.md`) file.
 
 ## Features
 
-- Export the current ChatGPT conversation as Markdown.
+- Export the current ChatGPT, Claude, or Gemini conversation as Markdown.
 - Automatically scroll upward before export so older, lazily loaded messages can be collected.
-- Adds a small right-edge `MD Export` tab on ChatGPT pages.
+- Adds a small right-edge `MD Export` tab on supported AI chat pages.
 - Runs locally in the browser. No analytics, no remote server, no external API calls.
 - Minimal permissions: no `tabs`, `downloads`, browsing history, storage, or clipboard permissions.
 
@@ -17,7 +17,14 @@ A privacy-first Chrome extension that exports the currently opened ChatGPT conve
 3. Open Chrome and go to `chrome://extensions/`.
 4. Enable **Developer mode**.
 5. Click **Load unpacked** and select the unzipped folder.
-6. Open a ChatGPT conversation, click the right-edge `MD Export` tab, then click **Save this conversation as .md**.
+6. Open a supported conversation, click the right-edge `MD Export` tab, then click **Save this conversation as .md**.
+
+## Supported sites
+
+- `https://chatgpt.com/*`
+- `https://chat.openai.com/*`
+- `https://claude.ai/*`
+- `https://gemini.google.com/*`
 
 ## Build locally
 
@@ -39,26 +46,23 @@ npm run check
 
 ## Privacy and permissions
 
-This extension reads the DOM of the currently opened ChatGPT conversation and creates a local Markdown download with `Blob` / object URLs. It does not send conversation content anywhere.
+This extension reads the DOM of the currently opened supported conversation and creates a local Markdown download with `Blob` / object URLs. It does not send conversation content anywhere.
 
-Current host permissions are limited to:
-
-- `https://chatgpt.com/*`
-- `https://chat.openai.com/*`
+Current host permissions are limited to the supported sites listed above.
 
 Chrome extension permissions are intentionally empty.
 
 ## Implementation notes
 
-- `src/content.ts`: injects the right-edge panel into ChatGPT and runs export.
+- `src/content.ts`: injects the right-edge panel into supported chat pages and runs export.
 - `src/lib/scroll.ts`: scrolls to the top and waits for lazily loaded conversation turns.
-- `src/lib/extract.ts`: extracts user / assistant turns from ChatGPT DOM.
+- `src/lib/extract.ts`: extracts user / assistant turns from ChatGPT, Claude, and Gemini DOM.
 - `src/lib/markdown.ts`: builds Markdown and sanitizes filenames.
 
 ## Known limitations
 
-ChatGPT may change its DOM structure. If extraction breaks, add a representative DOM snippet to `tests/extract.test.ts` first, then update the selectors / renderer.
+ChatGPT, Claude, or Gemini may change their DOM structure. If extraction breaks, add a representative DOM snippet to `tests/extract.test.ts` first, then update the selectors / renderer.
 
 ## Disclaimer
 
-This project is not affiliated with OpenAI.
+This project is not affiliated with OpenAI, Anthropic, or Google.

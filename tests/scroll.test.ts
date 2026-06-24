@@ -29,4 +29,30 @@ describe('selectBestScroller', () => {
 
     expect(selectBestScroller(document)).toBe(conversation);
   });
+
+  it('prefers scrollable containers that own Claude or Gemini turn nodes', () => {
+    const dom = new JSDOM(
+      `
+      <main>
+        <section id="unrelated"><p>long settings panel</p></section>
+        <section id="conversation">
+          <div data-testid="user-message">hello Claude</div>
+          <div class="font-claude-message">hi from Claude</div>
+          <user-query>hello Gemini</user-query>
+          <model-response><message-content>hi from Gemini</message-content></model-response>
+        </section>
+      </main>
+    `,
+      { url: 'https://claude.ai/chat/test' },
+    );
+    const document = dom.window.document;
+    const unrelated = document.querySelector('#unrelated')!;
+    const conversation = document.querySelector('#conversation')!;
+
+    setMetrics(unrelated, { scrollHeight: 4_000, clientHeight: 500 });
+    setMetrics(conversation, { scrollHeight: 2_000, clientHeight: 500 });
+
+    expect(selectBestScroller(document)).toBe(conversation);
+  });
+
 });

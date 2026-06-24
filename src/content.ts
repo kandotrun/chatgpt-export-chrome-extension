@@ -86,6 +86,7 @@ async function runExport(ui: ExportUi): Promise<void> {
       sourceUrl: location.href,
       exportedAt: new Date(),
       messages: conversation.messages,
+      assistantName: conversation.assistantName,
     });
 
     const filename = sanitizeFilename(conversation.title);

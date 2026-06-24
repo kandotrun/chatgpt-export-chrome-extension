@@ -1,15 +1,22 @@
 import type { ManifestV3Export } from '@crxjs/vite-plugin';
 
+const CHAT_HOSTS = [
+  'https://chatgpt.com/*',
+  'https://chat.openai.com/*',
+  'https://claude.ai/*',
+  'https://gemini.google.com/*',
+];
+
 const manifest: ManifestV3Export = {
   manifest_version: 3,
-  name: 'ChatGPT Markdown Exporter',
+  name: 'AI Chat Markdown Exporter',
   version: '0.1.0',
-  description: 'Export the current ChatGPT conversation to a local Markdown file.',
+  description: 'Export the current ChatGPT, Claude, or Gemini conversation to a local Markdown file.',
   permissions: [],
-  host_permissions: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+  host_permissions: CHAT_HOSTS,
   content_scripts: [
     {
-      matches: ['https://chatgpt.com/*', 'https://chat.openai.com/*'],
+      matches: CHAT_HOSTS,
       js: ['src/content.ts'],
       run_at: 'document_idle',
     },

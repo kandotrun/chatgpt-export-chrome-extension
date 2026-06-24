@@ -37,7 +37,7 @@ const PANEL_COPY: Record<PanelLocale, PanelCopy> = {
       error: 'Failed',
     },
     tabLabel: 'Save as .md',
-    openAria: 'Open ChatGPT Markdown Exporter',
+    openAria: 'Open AI Chat Markdown Exporter',
     closeAria: 'Close',
     buttonLabel: 'Save this conversation as .md',
     busyLabel: 'Loading…',
@@ -48,7 +48,7 @@ const PANEL_COPY: Record<PanelLocale, PanelCopy> = {
       `${messageCount} messages found / ${iteration} scrolls`,
     successBadge: '✓ Saved',
     successDetail: (messageCount) => `${messageCount} messages exported to Markdown`,
-    defaultEmptyError: 'Could not detect ChatGPT conversation messages.',
+    defaultEmptyError: 'Could not detect conversation messages.',
     defaultUnknownError: 'Export failed.',
   },
   ja: {
@@ -59,7 +59,7 @@ const PANEL_COPY: Record<PanelLocale, PanelCopy> = {
       error: '失敗しました',
     },
     tabLabel: 'MD保存',
-    openAria: 'ChatGPT Markdown Exporter を開く',
+    openAria: 'AI Chat Markdown Exporter を開く',
     closeAria: '閉じる',
     buttonLabel: 'この会話を .md 保存',
     busyLabel: '読み込み中…',
@@ -70,7 +70,7 @@ const PANEL_COPY: Record<PanelLocale, PanelCopy> = {
       `${messageCount} 件検出 / ${iteration} 回スクロール`,
     successBadge: '✓ 保存完了',
     successDetail: (messageCount) => `${messageCount} 件を Markdown 化`,
-    defaultEmptyError: 'ChatGPTの会話メッセージを検出できませんでした。',
+    defaultEmptyError: '会話メッセージを検出できませんでした。',
     defaultUnknownError: 'エクスポートに失敗しました。',
   },
 };
@@ -88,7 +88,7 @@ export function resolveLocale(source: NavigatorLanguageLike = globalThis.navigat
 }
 
 /**
- * Decide the panel theme by following ChatGPT's active appearance, falling back
+ * Decide the panel theme by following the active chat app appearance, falling back
  * to the OS preference. Pure: takes a Document, returns the resolved theme.
  */
 export function resolveTheme(doc: Document): PanelTheme {
@@ -261,11 +261,11 @@ export function panelMarkup(theme: PanelTheme = 'light', locale: PanelLocale = '
       <button class="tab" type="button" data-export-tab aria-label="${copy.openAria}">
         <span class="glyph">↓</span>${copy.tabLabel}
       </button>
-      <aside class="card" data-export-panel role="dialog" aria-label="ChatGPT Markdown Exporter">
+      <aside class="card" data-export-panel role="dialog" aria-label="AI Chat Markdown Exporter">
         <div class="card__head">
           <div class="brand" aria-hidden="true">M↓</div>
           <div class="head__text">
-            <span class="title">ChatGPT → Markdown</span>
+            <span class="title">AI Chat → Markdown</span>
             <span class="subtitle" data-export-subtitle>${copy.subtitle.idle}</span>
           </div>
           <button class="close" type="button" data-export-close aria-label="${copy.closeAria}">×</button>

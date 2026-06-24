@@ -1,38 +1,81 @@
 import type { ChatMessage, ChatRole, ExtractedConversation } from './types';
 
-const TURN_SELECTOR = '[data-message-author-role]';
+const CHATGPT_TURN_SELECTOR = '[data-message-author-role]';
+const CLAUDE_USER_SELECTOR = '[data-testid="user-message"], [data-testid="human-message"]';
+const CLAUDE_ASSISTANT_SELECTOR = '[data-testid="assistant-message"], .font-claude-message';
+const GEMINI_USER_SELECTOR = 'user-query, [data-testid="user-query"], .query-text';
+const GEMINI_ASSISTANT_SELECTOR =
+  'model-response, message-content, [data-testid="model-response"], .model-response-text, .response-content';
 
-export function extractConversation(document: Document): ExtractedConversation {
-  const title = extractTitle(document);
-  const turnElements = uniqueTopLevelTurns([...document.querySelectorAll<HTMLElement>(TURN_SELECTOR)]);
-  const messages = turnElements
-    .map((element, index): ChatMessage => {
-      const role = normalizeRole(element.getAttribute('data-message-author-role'));
-      return {
-        role,
-        text: extractTurnText(element, role),
-        index,
-      };
-    })
-    .filter((message) => message.text.length > 0);
+export const CONVERSATION_TURN_SELECTOR = [
+  CHATGPT_TURN_SELECTOR,
+  CLAUDE_USER_SELECTOR,
+  CLAUDE_ASSISTANT_SELECTOR,
+  GEMINI_USER_SELECTOR,
+  GEMINI_ASSISTANT_SELECTOR,
+].join(', ');
 
-  return { title, messages };
+interface TurnCandidate {
+  element: HTMLElement;
+  role: ChatRole;
 }
 
-function extractTitle(document: Document): string {
+export function extractConversation(document: Document): ExtractedConversation {
+  const assistantName = detectAssistantName(document);
+  const title = extractTitle(document, assistantName);
+  const turnElements = collectTurnCandidates(document);
+  const messages = turnElements
+    .map(({ element, role }, index): ChatMessage => ({
+      role,
+      text: extractTurnText(element, role),
+      index,
+    }))
+    .filter((message) => message.text.length > 0);
+
+  return { title, messages, assistantName };
+}
+
+function detectAssistantName(document: Document): string {
+  const hostname = document.location.hostname;
+  if (hostname === 'claude.ai' || hostname.endsWith('.claude.ai')) return 'Claude';
+  if (hostname === 'gemini.google.com' || hostname.endsWith('.gemini.google.com')) return 'Gemini';
+  return 'ChatGPT';
+}
+
+function extractTitle(document: Document, assistantName: string): string {
   const heading = document.querySelector('main h1, h1');
   const text = heading?.textContent?.trim();
   if (text) return collapseWhitespace(text);
 
-  const documentTitle = document.title.replace(/\s*[|\-–—]\s*ChatGPT\s*$/i, '').trim();
-  return documentTitle || 'ChatGPT Conversation';
+  const documentTitle = document.title
+    .replace(/\s*[|\-–—]\s*(ChatGPT|Claude|Gemini)\s*$/i, '')
+    .trim();
+  return documentTitle || `${assistantName} Conversation`;
 }
 
-function uniqueTopLevelTurns(elements: HTMLElement[]): HTMLElement[] {
-  return elements.filter((element) => {
-    const nestedParent = element.parentElement?.closest(TURN_SELECTOR);
-    return nestedParent === null;
-  });
+function collectTurnCandidates(document: Document): TurnCandidate[] {
+  const candidates = [...document.querySelectorAll<HTMLElement>(CONVERSATION_TURN_SELECTOR)]
+    .filter(isTopLevelTurn)
+    .map((element) => ({ element, role: roleForElement(element) }))
+    .filter((candidate) => candidate.role !== 'unknown')
+    .sort((a, b) => (a.element.compareDocumentPosition(b.element) & Node.DOCUMENT_POSITION_PRECEDING ? 1 : -1));
+
+  return candidates;
+}
+
+function isTopLevelTurn(element: HTMLElement): boolean {
+  const nestedParent = element.parentElement?.closest(CONVERSATION_TURN_SELECTOR);
+  return nestedParent === null;
+}
+
+function roleForElement(element: HTMLElement): ChatRole {
+  const role = normalizeRole(element.getAttribute('data-message-author-role'));
+  if (role !== 'unknown') return role;
+  if (element.matches(CLAUDE_USER_SELECTOR) || element.matches(GEMINI_USER_SELECTOR)) return 'user';
+  if (element.matches(CLAUDE_ASSISTANT_SELECTOR) || element.matches(GEMINI_ASSISTANT_SELECTOR)) {
+    return 'assistant';
+  }
+  return 'unknown';
 }
 
 function normalizeRole(role: string | null): ChatRole {
@@ -50,15 +93,18 @@ function extractTurnText(element: HTMLElement, role: ChatRole): string {
 
 function selectContentRoot(element: HTMLElement, role: ChatRole): HTMLElement {
   if (role === 'assistant') {
-    return (
-      element.querySelector<HTMLElement>('.markdown, [data-message-content], .prose') ?? element
-    );
+    const assistantContentSelector =
+      '.markdown, [data-message-content], .prose, message-content, .font-claude-message, .model-response-text, .response-content';
+    return selectSelfOrDescendant(element, assistantContentSelector);
   }
 
-  return (
-    element.querySelector<HTMLElement>('[data-message-content], .whitespace-pre-wrap, .break-words') ??
-    element
-  );
+  const userContentSelector =
+    '[data-message-content], .whitespace-pre-wrap, .break-words, .query-text, [data-testid="user-message"], [data-testid="human-message"], user-query';
+  return selectSelfOrDescendant(element, userContentSelector);
+}
+
+function selectSelfOrDescendant(element: HTMLElement, selector: string): HTMLElement {
+  return element.querySelector<HTMLElement>(selector) ?? (element.matches(selector) ? element : element);
 }
 
 function renderChildren(element: Element): string {

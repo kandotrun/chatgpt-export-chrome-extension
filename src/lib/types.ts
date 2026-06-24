@@ -11,9 +11,11 @@ export interface ConversationExport {
   sourceUrl: string;
   exportedAt: Date;
   messages: ChatMessage[];
+  assistantName?: string;
 }
 
 export interface ExtractedConversation {
   title: string;
   messages: ChatMessage[];
+  assistantName?: string;
 }

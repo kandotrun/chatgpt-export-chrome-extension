@@ -2,8 +2,8 @@ import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { extractConversation } from '../src/lib/extract';
 
-function dom(html: string): Document {
-  return new JSDOM(html, { url: 'https://chatgpt.com/c/abc123' }).window.document;
+function dom(html: string, url = 'https://chatgpt.com/c/abc123'): Document {
+  return new JSDOM(html, { url }).window.document;
 }
 
 describe('extractConversation', () => {
@@ -46,4 +46,49 @@ describe('extractConversation', () => {
       { role: 'assistant', text: '```ts\nconst a = 1;\nconsole.log(a);\n```', index: 1 },
     ]);
   });
+
+  it('extracts Claude user and assistant turns from Claude page markup', () => {
+    const document = dom(
+      `
+      <main>
+        <h1>メディアサイトの類似サービス</h1>
+        <div data-testid="user-message"><p>noteやzenのようなメディアサイトって他に何がある？</p></div>
+        <div class="font-claude-message"><p>いくつかご紹介します。</p><ul><li>Qiita</li><li>Medium</li></ul></div>
+      </main>
+    `,
+      'https://claude.ai/chat/cdcd8aa2-c848-494f-bf5e-191f1412ded9',
+    );
+
+    const result = extractConversation(document);
+
+    expect(result.assistantName).toBe('Claude');
+    expect(result.title).toBe('メディアサイトの類似サービス');
+    expect(result.messages).toEqual([
+      { role: 'user', text: 'noteやzenのようなメディアサイトって他に何がある？', index: 0 },
+      { role: 'assistant', text: 'いくつかご紹介します。\n\n- Qiita\n- Medium', index: 1 },
+    ]);
+  });
+
+  it('extracts Gemini user and model turns from Gemini page markup', () => {
+    const document = dom(
+      `
+      <main>
+        <h1>Gemini 調査</h1>
+        <user-query><div class="query-text">GeminiでもMarkdown exportできますか？</div></user-query>
+        <model-response><message-content><p>できます。</p><ol><li>会話を開く</li><li>保存する</li></ol></message-content></model-response>
+      </main>
+    `,
+      'https://gemini.google.com/app/abc123',
+    );
+
+    const result = extractConversation(document);
+
+    expect(result.assistantName).toBe('Gemini');
+    expect(result.title).toBe('Gemini 調査');
+    expect(result.messages).toEqual([
+      { role: 'user', text: 'GeminiでもMarkdown exportできますか？', index: 0 },
+      { role: 'assistant', text: 'できます。\n\n1. 会話を開く\n2. 保存する', index: 1 },
+    ]);
+  });
+
 });

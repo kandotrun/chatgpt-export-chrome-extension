@@ -8,8 +8,10 @@ const ROLE_LABELS: Record<ChatMessage['role'], string> = {
   unknown: 'Unknown',
 };
 
+const DEFAULT_ASSISTANT_LABEL = 'ChatGPT';
+
 export function buildMarkdown(exportData: ConversationExport): string {
-  const title = exportData.title.trim() || 'ChatGPT Conversation';
+  const title = exportData.title.trim() || 'AI Chat Conversation';
   const header = [
     `# ${title}`,
     '',
@@ -22,7 +24,10 @@ export function buildMarkdown(exportData: ConversationExport): string {
 
   const body = exportData.messages
     .map((message) => {
-      const label = ROLE_LABELS[message.role] ?? ROLE_LABELS.unknown;
+      const label =
+        message.role === 'assistant'
+          ? exportData.assistantName?.trim() || DEFAULT_ASSISTANT_LABEL
+          : ROLE_LABELS[message.role] ?? ROLE_LABELS.unknown;
       return `## ${label}\n\n${stabilizeFencedCodeBlocks(message.text).trim()}`;
     })
     .join('\n\n---\n\n');
