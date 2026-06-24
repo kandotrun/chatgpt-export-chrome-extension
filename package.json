@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Privacy-first Chrome extension for exporting the current ChatGPT conversation to Markdown.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
