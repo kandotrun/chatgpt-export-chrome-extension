@@ -1,10 +1,25 @@
 import { extractConversation } from './lib/extract';
 import { buildMarkdown, sanitizeFilename } from './lib/markdown';
+import {
+  panelMarkup,
+  renderStatus,
+  resolveTheme,
+  STATUS_SUBTITLE,
+  type PanelTheme,
+  type StatusState,
+} from './lib/panel';
 import { hydrateConversationHistory } from './lib/scroll';
 
 const HOST_ID = 'kan-chatgpt-markdown-exporter';
 
 installExporter();
+
+interface ExportUi {
+  button: HTMLButtonElement;
+  label: HTMLElement;
+  subtitle: HTMLElement;
+  status: HTMLElement;
+}
 
 function installExporter(): void {
   if (document.getElementById(HOST_ID)) return;
@@ -12,32 +27,47 @@ function installExporter(): void {
   const host = document.createElement('div');
   host.id = HOST_ID;
   const shadow = host.attachShadow({ mode: 'open' });
-  shadow.innerHTML = panelMarkup();
+  shadow.innerHTML = panelMarkup(resolveTheme(document));
   document.documentElement.append(host);
 
+  const root = shadow.querySelector<HTMLElement>('[data-export-root]');
   const tab = shadow.querySelector<HTMLButtonElement>('[data-export-tab]');
   const panel = shadow.querySelector<HTMLElement>('[data-export-panel]');
   const close = shadow.querySelector<HTMLButtonElement>('[data-export-close]');
-  const exportButton = shadow.querySelector<HTMLButtonElement>('[data-export-button]');
+  const button = shadow.querySelector<HTMLButtonElement>('[data-export-button]');
+  const label = shadow.querySelector<HTMLElement>('[data-export-label]');
+  const subtitle = shadow.querySelector<HTMLElement>('[data-export-subtitle]');
   const status = shadow.querySelector<HTMLElement>('[data-export-status]');
 
-  if (!tab || !panel || !close || !exportButton || !status) return;
+  if (!root || !tab || !panel || !close || !button || !label || !subtitle || !status) return;
 
+  watchTheme(document, (theme) => root.setAttribute('data-theme', theme));
+
+  const ui: ExportUi = { button, label, subtitle, status };
   tab.addEventListener('click', () => panel.toggleAttribute('data-open'));
   close.addEventListener('click', () => panel.removeAttribute('data-open'));
-  exportButton.addEventListener('click', () => void runExport(exportButton, status));
+  button.addEventListener('click', () => void runExport(ui));
 }
 
-async function runExport(button: HTMLButtonElement, status: HTMLElement): Promise<void> {
-  button.disabled = true;
-  setStatus(status, '古い会話を読み込み中…');
+function setStatus(ui: ExportUi, state: StatusState): void {
+  ui.subtitle.textContent = STATUS_SUBTITLE[state.kind];
+  ui.status.innerHTML = renderStatus(state);
+  const busy = state.kind === 'progress';
+  ui.button.toggleAttribute('data-busy', busy);
+  ui.button.disabled = busy;
+  ui.label.textContent = busy ? '読み込み中…' : 'この会話を .md 保存';
+}
+
+async function runExport(ui: ExportUi): Promise<void> {
+  setStatus(ui, { kind: 'progress', messageCount: 0, iteration: 0 });
 
   try {
     await hydrateConversationHistory(document, (progress) => {
-      setStatus(
-        status,
-        `読み込み中… ${progress.messageCount}件検出 / ${progress.iteration}回スクロール`,
-      );
+      setStatus(ui, {
+        kind: 'progress',
+        messageCount: progress.messageCount,
+        iteration: progress.iteration,
+      });
     });
 
     const conversation = extractConversation(document);
@@ -52,13 +82,37 @@ async function runExport(button: HTMLButtonElement, status: HTMLElement): Promis
       messages: conversation.messages,
     });
 
-    downloadTextFile(sanitizeFilename(conversation.title), markdown);
-    setStatus(status, `${conversation.messages.length}件をMarkdownで保存しました。`);
+    const filename = sanitizeFilename(conversation.title);
+    downloadTextFile(filename, markdown);
+    setStatus(ui, {
+      kind: 'success',
+      messageCount: conversation.messages.length,
+      filename,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'エクスポートに失敗しました。';
-    setStatus(status, message, true);
-  } finally {
-    button.disabled = false;
+    setStatus(ui, { kind: 'error', message });
+  }
+}
+
+function watchTheme(doc: Document, apply: (theme: PanelTheme) => void): void {
+  apply(resolveTheme(doc));
+  const update = (): void => apply(resolveTheme(doc));
+
+  if (doc.documentElement) {
+    new MutationObserver(update).observe(doc.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'style', 'data-theme'],
+    });
+  }
+
+  const view = doc.defaultView;
+  if (view && typeof view.matchMedia === 'function') {
+    try {
+      view.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', update);
+    } catch {
+      /* matchMedia change events unsupported */
+    }
   }
 }
 
@@ -74,80 +128,4 @@ function downloadTextFile(filename: string, text: string): void {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
-}
-
-function setStatus(status: HTMLElement, text: string, isError = false): void {
-  status.textContent = text;
-  status.toggleAttribute('data-error', isError);
-}
-
-function panelMarkup(): string {
-  return `
-    <style>
-      :host { all: initial; color-scheme: light dark; }
-      .tab {
-        position: fixed;
-        right: 0;
-        top: 42%;
-        z-index: 2147483647;
-        writing-mode: vertical-rl;
-        border: 0;
-        border-radius: 12px 0 0 12px;
-        padding: 14px 9px;
-        background: #111827;
-        color: #fff;
-        font: 600 13px/1.2 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        box-shadow: 0 8px 26px rgb(0 0 0 / 24%);
-        cursor: pointer;
-        letter-spacing: .04em;
-      }
-      .panel {
-        position: fixed;
-        right: 14px;
-        top: 86px;
-        z-index: 2147483647;
-        display: none;
-        width: min(340px, calc(100vw - 28px));
-        border: 1px solid rgb(148 163 184 / 32%);
-        border-radius: 18px;
-        background: color-mix(in srgb, Canvas 94%, transparent);
-        color: CanvasText;
-        box-shadow: 0 18px 70px rgb(15 23 42 / 28%);
-        backdrop-filter: blur(14px);
-        font: 14px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        overflow: hidden;
-      }
-      .panel[data-open] { display: block; }
-      .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgb(148 163 184 / 22%); }
-      .title { font-weight: 700; font-size: 14px; }
-      .close { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 20px; line-height: 1; opacity: .7; }
-      .body { padding: 16px; }
-      .primary {
-        width: 100%;
-        border: 0;
-        border-radius: 12px;
-        padding: 11px 14px;
-        background: #10a37f;
-        color: white;
-        font-weight: 700;
-        cursor: pointer;
-      }
-      .primary:disabled { cursor: wait; opacity: .66; }
-      .status { min-height: 3em; margin: 12px 0 0; color: rgb(100 116 139); white-space: pre-wrap; }
-      .status[data-error] { color: #dc2626; }
-      .note { margin: 12px 0 0; font-size: 12px; color: rgb(100 116 139); }
-    </style>
-    <button class="tab" type="button" data-export-tab>MD Export</button>
-    <aside class="panel" data-export-panel aria-label="ChatGPT Markdown Exporter">
-      <div class="head">
-        <div class="title">ChatGPT → Markdown</div>
-        <button class="close" type="button" data-export-close aria-label="閉じる">×</button>
-      </div>
-      <div class="body">
-        <button class="primary" type="button" data-export-button>この会話を .md 保存</button>
-        <div class="status" data-export-status>ボタンを押すと上まで自動スクロールして、読み込まれた全ターンをMarkdown化します。</div>
-        <p class="note">外部送信なし。ページ内DOMから抽出してローカルに保存します。</p>
-      </div>
-    </aside>
-  `;
 }
