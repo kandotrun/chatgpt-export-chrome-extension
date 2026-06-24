@@ -2,7 +2,7 @@ import type { ChatMessage, ChatRole, ExtractedConversation } from './types';
 
 const CHATGPT_TURN_SELECTOR = '[data-message-author-role]';
 const CLAUDE_USER_SELECTOR = '[data-testid="user-message"], [data-testid="human-message"]';
-const CLAUDE_ASSISTANT_SELECTOR = '[data-testid="assistant-message"], .font-claude-message';
+const CLAUDE_ASSISTANT_SELECTOR = '[data-testid="assistant-message"], .font-claude-message, .font-claude-response';
 const GEMINI_USER_SELECTOR = 'user-query, [data-testid="user-query"], .query-text';
 const GEMINI_ASSISTANT_SELECTOR =
   'model-response, message-content, [data-testid="model-response"], .model-response-text, .response-content';
@@ -168,7 +168,7 @@ function extractTurnText(element: HTMLElement, role: ChatRole): string {
 function selectContentRoot(element: HTMLElement, role: ChatRole): HTMLElement {
   if (role === 'assistant') {
     const assistantContentSelector =
-      '.markdown, [data-message-content], .prose, message-content, .font-claude-message, .model-response-text, .response-content';
+      '.markdown, [data-message-content], .prose, message-content, .font-claude-message, .font-claude-response, .model-response-text, .response-content';
     return selectSelfOrDescendant(element, assistantContentSelector);
   }
 

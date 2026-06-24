@@ -70,6 +70,30 @@ describe('extractConversation', () => {
     ]);
   });
 
+  it('extracts Claude assistant responses rendered with the current response class', () => {
+    const document = dom(
+      `
+      <main>
+        <h1>採用見送りのお詫びと説明</h1>
+        <div data-testid="user-message"><p>カジュアル面談をした方に採用予定がなくなったことを伝えます。</p></div>
+        <div class="font-claude-response"><p>こんな形で送ると自然です。</p><p>今回は本当にごめんなさい。</p></div>
+        <div data-testid="user-message"><p>もう少しカジュアルにしてほしいです</p></div>
+        <div class="font-claude-response"><p>もちろんです。少し柔らかくすると以下です。</p></div>
+      </main>
+    `,
+      'https://claude.ai/chat/ec233ef6-b772-4e18-a3d9-981c75d28ff7',
+    );
+
+    const result = extractConversation(document);
+
+    expect(result.messages).toEqual([
+      { role: 'user', text: 'カジュアル面談をした方に採用予定がなくなったことを伝えます。', index: 0 },
+      { role: 'assistant', text: 'こんな形で送ると自然です。\n\n今回は本当にごめんなさい。', index: 1 },
+      { role: 'user', text: 'もう少しカジュアルにしてほしいです', index: 2 },
+      { role: 'assistant', text: 'もちろんです。少し柔らかくすると以下です。', index: 3 },
+    ]);
+  });
+
   it('extracts Gemini user and model turns from Gemini page markup', () => {
     const document = dom(
       `
