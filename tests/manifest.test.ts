@@ -10,7 +10,7 @@ type TestManifest = {
 const extensionManifest = manifest as TestManifest;
 
 describe('extension manifest', () => {
-  it('keeps permissions minimal for privacy-sensitive ChatGPT export', () => {
+  it('keeps permissions minimal for privacy-sensitive AI chat export', () => {
     expect(extensionManifest.permissions ?? []).toEqual([]);
     expect(extensionManifest.host_permissions).toEqual([
       'https://chatgpt.com/*',

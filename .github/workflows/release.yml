@@ -33,7 +33,7 @@ jobs:
           from zipfile import ZipFile, ZIP_DEFLATED
 
           root = Path('dist')
-          out = Path('artifacts/chatgpt-markdown-exporter.zip')
+          out = Path('artifacts/ai-chat-markdown-exporter.zip')
           if not (root / 'manifest.json').exists():
               raise SystemExit('dist/manifest.json is missing; build did not produce a Chrome extension')
 
@@ -48,7 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: latest-main
-          ASSET: artifacts/chatgpt-markdown-exporter.zip
+          ASSET: artifacts/ai-chat-markdown-exporter.zip
         run: |
           set -euo pipefail
 
@@ -58,7 +58,7 @@ jobs:
           Commit: ${GITHUB_SHA}
 
           Install:
-          1. Download \`chatgpt-markdown-exporter.zip\`.
+          1. Download \`ai-chat-markdown-exporter.zip\`.
           2. Unzip it locally.
           3. Open \`chrome://extensions/\`.
           4. Enable Developer mode.

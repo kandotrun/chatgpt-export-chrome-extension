@@ -1,6 +1,6 @@
 # Agent instructions
 
-This repository is a privacy-sensitive Chrome extension for exporting the current ChatGPT, Claude, or Gemini conversation to Markdown.
+This repository is a privacy-sensitive Chrome extension for exporting the current AI Chat conversation (ChatGPT, Claude, or Gemini) to Markdown.
 
 ## Non-negotiables
 

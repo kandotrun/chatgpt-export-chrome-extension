@@ -1,10 +1,10 @@
 # AI Chat Markdown Exporter
 
-A privacy-first Chrome extension that exports the currently opened ChatGPT, Claude, or Gemini conversation to a local Markdown (`.md`) file.
+A privacy-first Chrome extension that exports the currently opened AI Chat conversation (ChatGPT, Claude, or Gemini) to a local Markdown (`.md`) file.
 
 ## Features
 
-- Export the current ChatGPT, Claude, or Gemini conversation as Markdown.
+- Export the current AI Chat conversation (ChatGPT, Claude, or Gemini) as Markdown.
 - Automatically scroll upward before export so older, lazily loaded messages can be collected.
 - Cancels the export instead of saving a partial file if the page cannot confirm a stable top after the scroll safety limit.
 - Adds a small right-edge `MD Export` tab on supported AI chat pages.
@@ -13,7 +13,7 @@ A privacy-first Chrome extension that exports the currently opened ChatGPT, Clau
 
 ## Install from the latest release
 
-1. Download `chatgpt-markdown-exporter.zip` from the [latest release](https://github.com/kandotrun/chatgpt-export-chrome-extension/releases/latest).
+1. Download `ai-chat-markdown-exporter.zip` from the [latest release](https://github.com/kandotrun/ai-chat-export-chrome-extension/releases/latest).
 2. Unzip it locally.
 3. Open Chrome and go to `chrome://extensions/`.
 4. Enable **Developer mode**.

@@ -5,7 +5,7 @@ Status: approved (design), pending implementation
 
 ## Goal
 
-Restyle the ChatGPT Markdown Exporter's injected UI (`src/content.ts`) so it visually
+Restyle the AI Chat Markdown Exporter's injected UI (`src/content.ts`) so it visually
 matches the [`kandotrun/ai-slop`](https://github.com/kandotrun/ai-slop) design system —
 the "retro-cute" language (Shadcn structure × Bootstrap 2 texture) built on the brand
 indigo `#4f46e5`. This is a bold visual + information-design refresh, but it preserves the
@@ -16,7 +16,7 @@ extension's core experience and privacy guarantees.
 - Right-edge launcher → one tap exports the currently opened conversation as `.md`.
 - No remote analytics / telemetry / external API calls / network requests.
 - Minimal permissions. `src/manifest.ts` stays unchanged: `permissions: []`, host
-  permissions limited to `https://chatgpt.com/*` and `https://chat.openai.com/*`.
+  permissions limited to `https://chatgpt.com/*`, `https://chat.openai.com/*`, `https://claude.ai/*`, and `https://gemini.google.com/*`.
 - No bundled fonts / `web_accessible_resources` (decided: system fonts only).
 - Extraction / scroll / markdown logic untouched — this is a presentation-layer change.
 
@@ -25,7 +25,7 @@ extension's core experience and privacy guarantees.
 | Topic | Decision |
 | --- | --- |
 | Scope | Full visual + interaction redesign of the panel (keep export-only core UX) |
-| Dark mode | Light **and** dark, following ChatGPT's active theme |
+| Dark mode | Light **and** dark, following the active chat app's theme |
 | Fonts | System font stack; `"Geist"`/`"Geist Mono"` only as the first fallback name |
 
 ## Design system tokens adopted (from ai-slop `src/client/styles/tokens.css` + `DESIGN.md`)
@@ -49,7 +49,7 @@ extension's core experience and privacy guarantees.
 1. **Launcher tab** — vertical indigo glossy pill on the right edge, `↓` glyph + `MD保存`
    label, bevel + gloss + soft shadow; hover nudges left, active presses in.
 2. **Card** — `--radius-xl`, 1px border, layered card shadow.
-   - **Header**: indigo brand mark (rounded `M↓`), title `ChatGPT → Markdown`, a
+   - **Header**: indigo brand mark (rounded `M↓`), title `AI Chat → Markdown`, a
      state-dependent subtitle, and a ghost close button. Header has the
      gloss-to-indigo-tint gradient + bevel-top.
    - **Body**: primary glossy indigo button (download icon + `この会話を .md 保存`), then a

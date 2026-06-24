@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restyle the injected ChatGPT Markdown Exporter panel to match the ai-slop "retro-cute" indigo design system, with light/dark theming and richer status states, while preserving the export-only core UX and all privacy non-negotiables.
+**Goal:** Restyle the injected AI Chat Markdown Exporter panel to match the ai-slop "retro-cute" indigo design system, with light/dark theming and richer status states, while preserving the export-only core UX and all privacy non-negotiables.
 
 **Architecture:** Extract all presentation (CSS string, markup, status rendering, theme resolution) into a new pure module `src/lib/panel.ts` so it is unit-testable without a browser and without triggering `content.ts`'s import-time `installExporter()`. `src/content.ts` becomes thin wiring: build markup, resolve+observe theme, handle clicks, drive a 4-state status model.
 
@@ -443,14 +443,14 @@ export function panelMarkup(theme: PanelTheme = 'light'): string {
   return `
     <style>${panelStyles()}</style>
     <div class="root" data-export-root data-theme="${theme}">
-      <button class="tab" type="button" data-export-tab aria-label="ChatGPT Markdown Exporter を開く">
+      <button class="tab" type="button" data-export-tab aria-label="AI Chat Markdown Exporter を開く">
         <span class="glyph">↓</span>MD保存
       </button>
-      <aside class="card" data-export-panel role="dialog" aria-label="ChatGPT Markdown Exporter">
+      <aside class="card" data-export-panel role="dialog" aria-label="AI Chat Markdown Exporter">
         <div class="card__head">
           <div class="brand" aria-hidden="true">M↓</div>
           <div class="head__text">
-            <span class="title">ChatGPT → Markdown</span>
+            <span class="title">AI Chat → Markdown</span>
             <span class="subtitle" data-export-subtitle>${STATUS_SUBTITLE.idle}</span>
           </div>
           <button class="close" type="button" data-export-close aria-label="閉じる">×</button>
@@ -654,7 +654,7 @@ Render `panelMarkup()` from the actual module into an HTML harness and screensho
 
 ```bash
 cat > /tmp/exporter-mockup/render.mts <<'TS'
-import { panelMarkup, renderStatus } from '/Users/kan/UGREEN-NAS/DEVELOP/kandotrun/chatgpt-export-chrome-extension/src/lib/panel.ts';
+import { panelMarkup, renderStatus } from '/Users/kan/UGREEN-NAS/DEVELOP/kandotrun/ai-chat-export-chrome-extension/src/lib/panel.ts';
 import { writeFileSync } from 'node:fs';
 const states = [
   renderStatus({ kind: 'idle' }),

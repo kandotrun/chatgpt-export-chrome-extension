@@ -11,7 +11,7 @@ const manifest: ManifestV3Export = {
   manifest_version: 3,
   name: 'AI Chat Markdown Exporter',
   version: '0.1.0',
-  description: 'Export the current ChatGPT, Claude, or Gemini conversation to a local Markdown file.',
+  description: 'Export the current AI Chat conversation (ChatGPT, Claude, or Gemini) to a local Markdown file.',
   permissions: [],
   host_permissions: CHAT_HOSTS,
   content_scripts: [

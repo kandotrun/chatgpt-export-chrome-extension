@@ -1,9 +1,9 @@
 {
-  "name": "chatgpt-export-chrome-extension",
+  "name": "ai-chat-export-chrome-extension",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Privacy-first Chrome extension for exporting the current ChatGPT, Claude, or Gemini conversation to Markdown.",
+  "description": "Privacy-first Chrome extension for exporting AI Chat conversations (ChatGPT, Claude, or Gemini) to Markdown.",
   "engines": {
     "node": ">=22"
   },
