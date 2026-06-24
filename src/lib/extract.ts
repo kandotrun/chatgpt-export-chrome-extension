@@ -43,14 +43,88 @@ function detectAssistantName(document: Document): string {
 }
 
 function extractTitle(document: Document, assistantName: string): string {
-  const heading = document.querySelector('main h1, h1');
-  const text = heading?.textContent?.trim();
-  if (text) return collapseWhitespace(text);
+  const siteTitle = extractSiteSpecificTitle(document, assistantName);
+  if (siteTitle) return siteTitle;
 
-  const documentTitle = document.title
-    .replace(/\s*[|\-–—]\s*(ChatGPT|Claude|Gemini)\s*$/i, '')
-    .trim();
+  const heading = document.querySelector('main h1, h1');
+  const text = normalizeTitleCandidate(heading?.textContent ?? '', assistantName);
+  if (text) return text;
+
+  const documentTitle = normalizeTitleCandidate(
+    document.title.replace(/\s*[|\-–—]\s*(ChatGPT|Claude|Gemini)\s*$/i, ''),
+    assistantName,
+  );
   return documentTitle || `${assistantName} Conversation`;
+}
+
+function extractSiteSpecificTitle(document: Document, assistantName: string): string {
+  if (assistantName !== 'Gemini') return '';
+  return extractGeminiConversationTitle(document);
+}
+
+function extractGeminiConversationTitle(document: Document): string {
+  const conversationId = document.location.pathname.match(/\/app\/([^/?#]+)/)?.[1];
+  if (!conversationId) return '';
+
+  const matchingLinks = [...document.querySelectorAll<HTMLElement>('a[href], [role="link"][href]')].filter((element) => {
+    const href = element.getAttribute('href');
+    if (!href) return false;
+
+    try {
+      const url = new URL(href, document.location.href);
+      return url.hostname === document.location.hostname && url.pathname.match(/\/app\/([^/?#]+)/)?.[1] === conversationId;
+    } catch {
+      return false;
+    }
+  });
+
+  const activeLinks = matchingLinks.filter(
+    (element) => element.getAttribute('aria-current') === 'page' || element.getAttribute('aria-selected') === 'true',
+  );
+
+  for (const element of [...activeLinks, ...matchingLinks]) {
+    const title = extractTitleFromElement(element, 'Gemini');
+    if (title) return title;
+  }
+
+  return '';
+}
+
+function extractTitleFromElement(element: HTMLElement, assistantName: string): string {
+  const titleSelector = [
+    '[data-testid*="title" i]',
+    '[data-test-id*="title" i]',
+    '[class*="conversation-title" i]',
+    '[class*="chat-title" i]',
+    '[class*="title" i]',
+  ].join(', ');
+
+  const titledElement = element.querySelector<HTMLElement>(titleSelector);
+  const descendantTitle = normalizeTitleCandidate(titledElement?.textContent ?? '', assistantName);
+  if (descendantTitle) return descendantTitle;
+
+  const attributeTitle = normalizeTitleCandidate(element.getAttribute('title') ?? element.getAttribute('aria-label') ?? '', assistantName);
+  if (attributeTitle) return attributeTitle;
+
+  const clone = element.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll('button, svg, mat-icon, [aria-hidden="true"]').forEach((node) => node.remove());
+  return normalizeTitleCandidate(clone.textContent ?? '', assistantName);
+}
+
+function normalizeTitleCandidate(text: string, assistantName: string): string {
+  const title = collapseWhitespace(text);
+  if (!title || title.length > 120) return '';
+
+  const genericTitles = [
+    assistantName,
+    `${assistantName} Conversation`,
+    `${assistantName} との会話`,
+    'AI Chat Conversation',
+    'New chat',
+    '新しいチャット',
+  ];
+
+  return genericTitles.some((generic) => title.toLowerCase() === generic.toLowerCase()) ? '' : title;
 }
 
 function collectTurnCandidates(document: Document): TurnCandidate[] {

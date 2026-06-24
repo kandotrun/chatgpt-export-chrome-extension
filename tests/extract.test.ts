@@ -1,6 +1,7 @@
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { extractConversation } from '../src/lib/extract';
+import { sanitizeFilename } from '../src/lib/markdown';
 
 function dom(html: string, url = 'https://chatgpt.com/c/abc123'): Document {
   return new JSDOM(html, { url }).window.document;
@@ -91,4 +92,28 @@ describe('extractConversation', () => {
     ]);
   });
 
+  it('uses the active Gemini history title instead of the generic browser title', () => {
+    const document = dom(
+      `
+      <title>Gemini との会話</title>
+      <nav aria-label="Recent conversations">
+        <a href="/app/old"><span class="conversation-title">古い会話</span></a>
+        <a href="/u/1/app/1df1571bfc796b81" aria-current="page">
+          <span class="conversation-title">性感染症の検査と治療について</span>
+          <button aria-label="その他のオプション">⋮</button>
+        </a>
+      </nav>
+      <main>
+        <user-query><div class="query-text">話者識別して文字起こしして</div></user-query>
+        <model-response><message-content><p>承知しました。</p></message-content></model-response>
+      </main>
+    `,
+      'https://gemini.google.com/u/1/app/1df1571bfc796b81?pageId=none',
+    );
+
+    const result = extractConversation(document);
+
+    expect(result.title).toBe('性感染症の検査と治療について');
+    expect(sanitizeFilename(result.title)).toBe('性感染症の検査と治療について.md');
+  });
 });
