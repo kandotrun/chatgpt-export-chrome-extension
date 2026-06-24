@@ -5,9 +5,10 @@ This repository is a privacy-sensitive Chrome extension for exporting the curren
 ## Non-negotiables
 
 - Do not add remote analytics, telemetry, external API calls, or backend dependencies.
-- Keep Chrome permissions minimal. The manifest should not request broad browsing history, tabs, downloads, storage, or clipboard permissions unless Kan explicitly approves the exact reason.
-- Target only `https://chatgpt.com/*` and `https://chat.openai.com/*` unless Kan asks for another host.
+- Keep Chrome permissions minimal. The manifest should not request broad browsing history, tabs, downloads, storage, or clipboard permissions unless the maintainer explicitly approves the exact reason.
+- Target only `https://chatgpt.com/*` and `https://chat.openai.com/*` unless the maintainer asks for another host.
 - Preserve the core UX: right-edge tab on ChatGPT, one button to export the currently opened conversation as `.md`.
+- Public-facing docs should describe the extension as generally usable, not as a personal-only tool.
 
 ## Development workflow
 

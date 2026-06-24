@@ -1,40 +1,64 @@
 # ChatGPT Markdown Exporter
 
-ChatGPT の現在開いている会話だけを Markdown (`.md`) としてローカル保存する、Kan 用のプライバシー重視 Chrome 拡張です。
+A privacy-first Chrome extension that exports the currently opened ChatGPT conversation to a local Markdown (`.md`) file.
 
-## 方針
+## Features
 
-- 外部送信なし: ページ内 DOM から抽出し、Blob download でローカル保存します。
-- 権限最小化: Chrome permissions は空です。対象ホストは `chatgpt.com` と `chat.openai.com` のみです。
-- 現在のセッション限定: ChatGPT で開いている会話ページだけを対象にします。
-- 古い会話対応: エクスポート前に上方向へ自動スクロールし、未読み込みターンの読み込みを待ちます。
+- Export the current ChatGPT conversation as Markdown.
+- Automatically scroll upward before export so older, lazily loaded messages can be collected.
+- Adds a small right-edge `MD Export` tab on ChatGPT pages.
+- Runs locally in the browser. No analytics, no remote server, no external API calls.
+- Minimal permissions: no `tabs`, `downloads`, browsing history, storage, or clipboard permissions.
 
-## 開発
+## Install from the latest release
+
+1. Download `chatgpt-markdown-exporter.zip` from the [latest release](https://github.com/kandotrun/chatgpt-export-chrome-extension/releases/latest).
+2. Unzip it locally.
+3. Open Chrome and go to `chrome://extensions/`.
+4. Enable **Developer mode**.
+5. Click **Load unpacked** and select the unzipped folder.
+6. Open a ChatGPT conversation, click the right-edge `MD Export` tab, then click **Save this conversation as .md**.
+
+## Build locally
+
+```bash
+npm install
+npm run build
+```
+
+Then load the generated `dist/` folder from `chrome://extensions/` using **Load unpacked**.
+
+## Development
 
 ```bash
 npm install
 npm run check
 ```
 
-## ローカルで使う
+`npm run check` runs TypeScript type checks, unit tests, and a production build.
 
-```bash
-npm run build
-```
+## Privacy and permissions
 
-1. Chrome で `chrome://extensions/` を開く
-2. Developer mode を ON
-3. **Load unpacked** からこのリポジトリの `dist/` を選ぶ
-4. ChatGPT の会話ページを開く
-5. 右端の `MD Export` タブ → `この会話を .md 保存`
+This extension reads the DOM of the currently opened ChatGPT conversation and creates a local Markdown download with `Blob` / object URLs. It does not send conversation content anywhere.
 
-## 実装メモ
+Current host permissions are limited to:
 
-- `src/content.ts`: ChatGPT ページへ右サイドタブを注入し、エクスポートを実行
-- `src/lib/scroll.ts`: 会話の上端まで自動スクロールし、追加読み込みが落ち着くまで待つ
-- `src/lib/extract.ts`: ChatGPT の DOM から user / assistant ターンを抽出
-- `src/lib/markdown.ts`: Markdown 生成とファイル名サニタイズ
+- `https://chatgpt.com/*`
+- `https://chat.openai.com/*`
 
-## 既知の制約
+Chrome extension permissions are intentionally empty.
 
-ChatGPT 側の DOM 変更には追従が必要です。DOM が変わって抽出できなくなった場合は、`tests/extract.test.ts` に新しい実DOM断片のフィクスチャを追加してから修正してください。
+## Implementation notes
+
+- `src/content.ts`: injects the right-edge panel into ChatGPT and runs export.
+- `src/lib/scroll.ts`: scrolls to the top and waits for lazily loaded conversation turns.
+- `src/lib/extract.ts`: extracts user / assistant turns from ChatGPT DOM.
+- `src/lib/markdown.ts`: builds Markdown and sanitizes filenames.
+
+## Known limitations
+
+ChatGPT may change its DOM structure. If extraction breaks, add a representative DOM snippet to `tests/extract.test.ts` first, then update the selectors / renderer.
+
+## Disclaimer
+
+This project is not affiliated with OpenAI.

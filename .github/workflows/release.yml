@@ -1,0 +1,78 @@
+name: Release extension ZIP
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-main
+  cancel-in-progress: true
+
+jobs:
+  package-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - name: Package extension
+        run: |
+          mkdir -p artifacts
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+
+          root = Path('dist')
+          out = Path('artifacts/chatgpt-markdown-exporter.zip')
+          if not (root / 'manifest.json').exists():
+              raise SystemExit('dist/manifest.json is missing; build did not produce a Chrome extension')
+
+          with ZipFile(out, 'w', ZIP_DEFLATED) as zip_file:
+              for path in sorted(root.rglob('*')):
+                  if path.is_file():
+                      zip_file.write(path, path.relative_to(root).as_posix())
+
+          print(f'created {out} ({out.stat().st_size} bytes)')
+          PY
+      - name: Publish latest-main release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: latest-main
+          ASSET: artifacts/chatgpt-markdown-exporter.zip
+        run: |
+          set -euo pipefail
+
+          cat > release-notes.md <<EOF
+          Automated build from the latest \`main\` commit.
+
+          Commit: ${GITHUB_SHA}
+
+          Install:
+          1. Download \`chatgpt-markdown-exporter.zip\`.
+          2. Unzip it locally.
+          3. Open \`chrome://extensions/\`.
+          4. Enable Developer mode.
+          5. Click **Load unpacked** and select the unzipped folder.
+          EOF
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "$TAG" "$GITHUB_SHA"
+          git push --force origin "refs/tags/$TAG"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG"               --title "Latest main build"               --notes-file release-notes.md               --target "$GITHUB_SHA"               --latest
+            gh release upload "$TAG" "$ASSET#ChatGPT Markdown Exporter ZIP" --clobber
+          else
+            gh release create "$TAG" "$ASSET#ChatGPT Markdown Exporter ZIP"               --title "Latest main build"               --notes-file release-notes.md               --target "$GITHUB_SHA"               --verify-tag               --latest
+          fi
